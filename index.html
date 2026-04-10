@@ -175,11 +175,7 @@
 </head>
 <body class="antialiased">
 
-    <!-- ============================================ -->
-    <!-- VIEW: PARENT SIGNING PAGE (unique link)      -->
-    <!-- ============================================ -->
     <div id="view-parent-sign" class="hidden min-h-screen">
-        <!-- Header -->
         <div class="bg-gradient-to-br from-[#1a3c34] to-[#2d5a4e] text-white hero-pattern">
             <div class="max-w-3xl mx-auto px-4 sm:px-8 py-10 sm:py-14">
                 <div class="slide-up">
@@ -197,7 +193,6 @@
         </div>
 
         <div class="max-w-3xl mx-auto px-4 sm:px-8 py-8">
-            <!-- Student Info -->
             <div class="card-static p-5 mb-6 flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl" style="background: var(--clr-gold-light)">📋</div>
                 <div>
@@ -209,7 +204,6 @@
                 </div>
             </div>
 
-            <!-- Already Signed State -->
             <div id="ps-already-signed" class="hidden text-center py-16 fade-in">
                 <div class="text-6xl mb-6">✅</div>
                 <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Already Signed</h3>
@@ -217,23 +211,19 @@
                 <p class="text-gray-400 text-sm">If you have questions, please contact the school administration.</p>
             </div>
 
-            <!-- Expired State -->
             <div id="ps-expired" class="hidden text-center py-16 fade-in">
                 <div class="text-6xl mb-6">⏰</div>
                 <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Link Expired</h3>
                 <p class="text-gray-500 mb-3 max-w-md mx-auto">This signing link has expired. Please contact the school to request a new one.</p>
             </div>
 
-            <!-- Invalid Token -->
             <div id="ps-invalid" class="hidden text-center py-16 fade-in">
                 <div class="text-6xl mb-6">❌</div>
                 <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Invalid Link</h3>
                 <p class="text-gray-500 mb-3 max-w-md mx-auto">This link is not valid. Please check your email for the correct signing link.</p>
             </div>
 
-            <!-- Signing Flow -->
             <div id="ps-signing-flow" class="space-y-6">
-                <!-- Document Preview -->
                 <div class="card-static">
                     <h3 class="text-lg font-bold mb-3" style="color: var(--clr-forest)">📄 Document Preview</h3>
                     <p class="text-sm text-gray-500 mb-4">Review the document carefully before signing.</p>
@@ -251,18 +241,15 @@
                     </div>
                 </div>
 
-                <!-- Signature Section -->
                 <div class="card-static">
                     <h3 class="text-lg font-bold mb-1" style="color: var(--clr-forest)">✍️ Your Signature</h3>
                     <p class="text-sm text-gray-500 mb-4">Draw your signature in the box below, or type your full name.</p>
 
-                    <!-- Sig mode toggle -->
                     <div class="flex gap-2 mb-4">
                         <button onclick="setSigMode('draw')" id="sig-mode-draw" class="tab-btn active text-sm">Draw</button>
                         <button onclick="setSigMode('type')" id="sig-mode-type" class="tab-btn text-sm">Type</button>
                     </div>
 
-                    <!-- Draw signature -->
                     <div id="sig-draw-section">
                         <div class="sig-pad-wrap">
                             <canvas id="sig-canvas" class="sig-canvas w-full" height="160"></canvas>
@@ -273,7 +260,6 @@
                         </div>
                     </div>
 
-                    <!-- Type signature -->
                     <div id="sig-type-section" class="hidden">
                         <input type="text" id="sig-typed-name" placeholder="Type your full legal name" class="form-input text-lg" oninput="checkParentSignReady()">
                         <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[80px] flex items-center justify-center">
@@ -282,7 +268,6 @@
                     </div>
                 </div>
 
-                <!-- Attestation -->
                 <div class="card-static">
                     <h3 class="text-lg font-bold mb-4" style="color: var(--clr-forest)">📜 Acknowledgement</h3>
                     <div class="space-y-3">
@@ -303,13 +288,11 @@
                     </div>
                 </div>
 
-                <!-- Submit -->
                 <button onclick="submitParentSignature()" id="ps-btn-submit" disabled class="btn-gold w-full py-4 text-center text-base">
                     ✦ Sign & Submit
                 </button>
             </div>
 
-            <!-- Success State -->
             <div id="ps-success" class="hidden text-center py-16 fade-in">
                 <div class="text-6xl mb-6">🎉</div>
                 <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Successfully Signed!</h3>
@@ -323,9 +306,6 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- VIEW: ADMIN LOGIN                            -->
-    <!-- ============================================ -->
     <div id="view-admin-login" class="min-h-screen flex items-center justify-center p-4">
         <div class="card-static max-w-md w-full p-8 text-center gold-glow fade-in">
             <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background: linear-gradient(135deg, var(--clr-forest), var(--clr-sage))">
@@ -356,11 +336,7 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- VIEW: ADMIN DASHBOARD                        -->
-    <!-- ============================================ -->
     <div id="view-admin" class="hidden min-h-screen">
-        <!-- Admin Header -->
         <div class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
             <div class="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
                 <div>
@@ -378,7 +354,6 @@
         </div>
 
         <div class="max-w-6xl mx-auto px-4 sm:px-8 py-8">
-            <!-- Stats Cards -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 fade-in">
                 <div class="card-static text-center p-5">
                     <p class="text-3xl font-bold" style="color: var(--clr-forest)" id="stat-total">0</p>
@@ -398,7 +373,6 @@
                 </div>
             </div>
 
-            <!-- Tab Navigation -->
             <div class="flex items-center gap-2 mb-6 flex-wrap">
                 <button onclick="switchTab('send')" id="tab-send" class="tab-btn active">✦ Send New Form</button>
                 <button onclick="switchTab('tracking')" id="tab-tracking" class="tab-btn">📊 Tracking</button>
@@ -406,15 +380,11 @@
                 <button onclick="switchTab('templates')" id="tab-templates" class="tab-btn">📄 Form Templates</button>
             </div>
 
-            <!-- ================================== -->
-            <!-- TAB: SEND NEW FORM                 -->
-            <!-- ================================== -->
             <div id="panel-send" class="fade-in">
                 <div class="card-static p-6 sm:p-8">
                     <h2 class="text-xl font-bold mb-1" style="color: var(--clr-forest)">Send Form for Signature</h2>
                     <p class="text-sm text-gray-500 mb-6">Select students and a form template to generate unique signing links.</p>
 
-                    <!-- Step 1: Select Form Template -->
                     <div class="mb-8">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">1. Select Form Template</label>
                         <select id="send-template" class="form-input" onchange="onTemplateSelect()">
@@ -426,11 +396,9 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Select Students -->
                     <div class="mb-8">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">2. Select Students</label>
 
-                        <!-- Filters -->
                         <div class="flex flex-wrap gap-3 mb-4">
                             <input type="text" id="student-search" placeholder="Search by name..." class="search-input" oninput="filterStudents()">
                             <select id="filter-grade" class="form-input" style="max-width:160px" onchange="filterStudents()">
@@ -441,7 +409,6 @@
                             </select>
                         </div>
 
-                        <!-- Select All -->
                         <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="select-all-students" class="w-4 h-4" onchange="toggleSelectAll()">
@@ -450,13 +417,10 @@
                             <span class="text-xs text-gray-400" id="selected-count">0 selected</span>
                         </div>
 
-                        <!-- Student List -->
                         <div id="student-list" class="max-h-72 overflow-y-auto space-y-1 pr-1">
-                            <!-- Populated dynamically -->
-                        </div>
+                            </div>
                     </div>
 
-                    <!-- Step 3: Options -->
                     <div class="mb-8">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">3. Options</label>
                         <div class="grid sm:grid-cols-2 gap-4">
@@ -476,27 +440,21 @@
                         </div>
                     </div>
 
-                    <!-- Send Button -->
                     <button onclick="sendForSignature()" id="btn-send-forms" disabled class="btn-gold w-full py-3 text-center text-base">
                         ✦ Send Signing Requests
                     </button>
                 </div>
 
-                <!-- Send Confirmation -->
                 <div id="send-success" class="hidden mt-6 card-static p-6 text-center fade-in">
                     <div class="text-4xl mb-4">📨</div>
                     <h3 class="text-xl font-bold mb-2" style="color: var(--clr-forest)">Signing Requests Sent!</h3>
                     <p class="text-sm text-gray-500 mb-4" id="send-success-msg">Links have been sent to parents.</p>
                     <div id="send-success-links" class="text-left bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto space-y-2 mb-4">
-                        <!-- Links list -->
-                    </div>
+                        </div>
                     <button onclick="resetSendForm()" class="btn-primary">Send Another Form</button>
                 </div>
             </div>
 
-            <!-- ================================== -->
-            <!-- TAB: TRACKING                      -->
-            <!-- ================================== -->
             <div id="panel-tracking" class="hidden fade-in">
                 <div class="card-static p-6">
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -531,9 +489,6 @@
                 </div>
             </div>
 
-            <!-- ================================== -->
-            <!-- TAB: SIGNED DOCUMENTS              -->
-            <!-- ================================== -->
             <div id="panel-signed" class="hidden fade-in">
                 <div class="card-static p-6">
                     <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -559,9 +514,6 @@
                 </div>
             </div>
 
-            <!-- ================================== -->
-            <!-- TAB: FORM TEMPLATES                -->
-            <!-- ================================== -->
             <div id="panel-templates" class="hidden fade-in">
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <h2 class="text-xl font-bold" style="color: var(--clr-forest)">Form Templates</h2>
@@ -571,10 +523,8 @@
                     </button>
                 </div>
                 <div id="templates-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Populated dynamically -->
-                </div>
+                    </div>
 
-                <!-- Add Template Modal -->
                 <div id="modal-add-template" class="hidden overlay">
                     <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto fade-in">
                         <h3 class="text-xl font-bold mb-4" style="color: var(--clr-forest)">Add Form Template</h3>
@@ -588,9 +538,9 @@
                                 <input type="text" id="tpl-desc" placeholder="Brief description of the form" class="form-input">
                             </div>
                             <div>
-                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Google Drive PDF Link</label>
-                                <input type="text" id="tpl-drive-link" placeholder="https://drive.google.com/file/d/..." class="form-input">
-                                <p class="text-xs text-gray-400 mt-1">Paste the shareable link to the PDF form on Google Drive.</p>
+                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Google Doc Template Link</label>
+                                <input type="text" id="tpl-drive-link" placeholder="https://docs.google.com/document/d/..." class="form-input">
+                                <p class="text-xs text-gray-400 mt-1">Paste the shareable link to the Google Doc template.</p>
                             </div>
                             <div>
                                 <label class="text-sm font-semibold text-gray-700 mb-1 block">Category</label>
@@ -613,9 +563,6 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- LOADING OVERLAY                              -->
-    <!-- ============================================ -->
     <div id="loading-overlay" class="hidden overlay" style="background: rgba(0,0,0,0.5);">
         <div class="bg-white rounded-2xl p-8 text-center max-w-sm mx-4 fade-in">
             <div class="animate-spin w-10 h-10 border-4 border-gray-200 border-t-[#4a7c6f] rounded-full mx-auto mb-4"></div>
@@ -623,9 +570,6 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- RESEND CONFIRMATION MODAL                    -->
-    <!-- ============================================ -->
     <div id="modal-resend" class="hidden overlay">
         <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 fade-in">
             <h3 class="text-lg font-bold mb-2" style="color: var(--clr-forest)">Resend Signing Request?</h3>
@@ -637,9 +581,6 @@
         </div>
     </div>
 
-    <!-- ============================================ -->
-    <!-- PREVIEW SIGNED DOC MODAL                     -->
-    <!-- ============================================ -->
     <div id="modal-preview" class="hidden overlay">
         <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto fade-in">
             <div class="flex items-center justify-between mb-4">
@@ -745,7 +686,7 @@ function loadParentForm(token) {
         document.getElementById('ps-student-name').textContent = data.studentName || 'Student';
         document.getElementById('ps-student-info').textContent = (data.grade || '') + (data.className ? ' • ' + data.className : '');
 
-        // Load PDF preview
+        // Load PDF preview (Drive renders Docs as PDF automatically in preview)
         if (data.pdfUrl) {
             document.getElementById('ps-pdf-preview').innerHTML = `<iframe src="${data.pdfUrl}" class="w-full" style="min-height:500px; border:none;"></iframe>`;
         } else if (data.pdfEmbedHtml) {
@@ -908,9 +849,20 @@ function submitParentSignature() {
     });
 }
 
+function extractDriveFileId(url) {
+    if (!url) return '';
+    const patterns = [/\/file\/d\/([a-zA-Z0-9_-]+)/, /id=([a-zA-Z0-9_-]+)/, /\/d\/([a-zA-Z0-9_-]+)/, /open\?id=([a-zA-Z0-9_-]+)/];
+    for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
+    return '';
+}
+
 function downloadFormPDF() {
-    if (PARENT_FORM_DATA && PARENT_FORM_DATA.pdfDownloadUrl) {
-        window.open(PARENT_FORM_DATA.pdfDownloadUrl, '_blank');
+    if (PARENT_FORM_DATA && PARENT_FORM_DATA.driveLink) {
+        const fileId = extractDriveFileId(PARENT_FORM_DATA.driveLink);
+        if (fileId) {
+            // Forces Google Drive to export the Google Doc as a PDF download
+            window.open(`https://docs.google.com/document/d/${fileId}/export?format=pdf`, '_blank');
+        }
     }
 }
 
@@ -1113,7 +1065,7 @@ function renderTemplatesGrid() {
             </div>
             <p class="text-xs text-gray-500 mb-3 line-clamp-2">${t.description || 'No description'}</p>
             <div class="flex gap-2">
-                <a href="${t.driveLink || '#'}" target="_blank" class="text-xs text-[#4a7c6f] hover:underline font-semibold">View PDF ↗</a>
+                <a href="${t.driveLink || '#'}" target="_blank" class="text-xs text-[#4a7c6f] hover:underline font-semibold">View Template ↗</a>
                 <span class="text-gray-300">•</span>
                 <button onclick="deleteTemplate(${i})" class="text-xs text-red-400 hover:text-red-600 font-semibold">Delete</button>
             </div>
@@ -1131,7 +1083,7 @@ function saveTemplate() {
     const cat = document.getElementById('tpl-category').value;
 
     if (!name || !link) {
-        alert("Please fill in the template name and Drive link.");
+        alert("Please fill in the template name and Google Doc link.");
         return;
     }
 

@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVA Digital Forms & Signatures</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --clr-forest: #1a3c34;
+            --clr-sage: #4a7c6f;
+            --clr-gold: #c9a84c;
+            --clr-gold-light: #f5ecd0;
+            --clr-cream: #faf8f3;
+            --clr-warm: #f0ebe1;
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background-color: var(--clr-cream); color: #2d3436; }
+        h1, h2, h3, h4 { font-family: 'Lora', serif; }
+
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .slide-up { animation: slideUp 0.6s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .gold-border { border: 2px solid var(--clr-gold); }
+        .gold-glow { box-shadow: 0 0 20px rgba(201, 168, 76, 0.15); }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1.5px solid #d4cfc4;
+            background-color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.25s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--clr-gold);
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--clr-forest), var(--clr-sage));
+            color: #fff;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26, 60, 52, 0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--clr-gold), #d4b45a);
+            color: var(--clr-forest);
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201, 168, 76, 0.4); }
+
+        .btn-outline {
+            padding: 0.625rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1.5px solid #d4cfc4;
+            background: #fff;
+            color: #555;
+            font-weight: 600;
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+        .btn-outline:hover { border-color: var(--clr-gold); color: var(--clr-forest); background: var(--clr-gold-light); }
+
+        .card {
+            background: #fff;
+            border-radius: 1rem;
+            border: 1.5px solid #e8e3d8;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--clr-gold); box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+        .card-static {
+            background: #fff;
+            border-radius: 1rem;
+            border: 1.5px solid #e8e3d8;
+            padding: 1.5rem;
+        }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; }
+
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Signature canvas */
+        .sig-canvas {
+            border: 2px dashed #d4cfc4;
+            border-radius: 0.75rem;
+            background: #fff;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .sig-canvas.has-sig { border-style: solid; border-color: var(--clr-sage); }
+
+        /* Status badges */
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-signed { background: #d1fae5; color: #065f46; }
+        .badge-expired { background: #fee2e2; color: #991b1b; }
+        .badge-sent { background: #dbeafe; color: #1e40af; }
+
+        /* Tab nav */
+        .tab-btn { padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; transition: all 0.25s; cursor: pointer; border: none; background: transparent; color: #888; }
+        .tab-btn.active { background: var(--clr-forest); color: #fff; }
+        .tab-btn:not(.active):hover { background: var(--clr-warm); color: var(--clr-forest); }
+
+        /* Table */
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .data-table th { text-align: left; padding: 0.75rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; border-bottom: 1.5px solid #e8e3d8; font-family: 'DM Sans', sans-serif; }
+        .data-table td { padding: 0.75rem 1rem; font-size: 0.875rem; border-bottom: 1px solid #f0ebe1; }
+        .data-table tbody tr { transition: background 0.15s; }
+        .data-table tbody tr:hover { background: #faf8f3; }
+
+        /* Signature pad container */
+        .sig-pad-wrap { position: relative; }
+        .sig-pad-wrap .sig-placeholder {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            pointer-events: none; color: #ccc; font-size: 0.875rem; font-style: italic;
+        }
+        .sig-pad-wrap .sig-placeholder.hidden { display: none; }
+
+        /* PDF preview area */
+        .pdf-preview-area {
+            background: #f9f8f5;
+            border: 1.5px solid #e8e3d8;
+            border-radius: 0.75rem;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Checkbox custom */
+        input[type="checkbox"] { accent-color: var(--clr-sage); }
+
+        /* Search input */
+        .search-input {
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            border-radius: 0.5rem;
+            border: 1.5px solid #d4cfc4;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23aaa' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E") no-repeat 0.75rem center;
+            background-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.25s;
+            width: 100%;
+            max-width: 320px;
+        }
+        .search-input:focus { outline: none; border-color: var(--clr-gold); box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15); }
+
+        @media (max-width: 640px) {
+            .data-table th, .data-table td { padding: 0.5rem 0.625rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- ============================================ -->
+    <!-- VIEW: PARENT SIGNING PAGE (unique link)      -->
+    <!-- ============================================ -->
+    <div id="view-parent-sign" class="hidden min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-br from-[#1a3c34] to-[#2d5a4e] text-white hero-pattern">
+            <div class="max-w-3xl mx-auto px-4 sm:px-8 py-10 sm:py-14">
+                <div class="slide-up">
+                    <div class="inline-block bg-white/10 backdrop-blur px-4 py-1.5 rounded-full text-sm font-medium mb-4 border border-white/20">
+                        ✦ Digital Signature Request
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl font-bold mb-3 leading-tight">
+                        Form <span class="text-[#c9a84c]" id="ps-form-title">Review & Sign</span>
+                    </h1>
+                    <p class="text-base text-white/70 max-w-xl leading-relaxed" id="ps-description">
+                        Please review the document below carefully, then provide your digital signature to confirm.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-3xl mx-auto px-4 sm:px-8 py-8">
+            <!-- Student Info -->
+            <div class="card-static p-5 mb-6 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl" style="background: var(--clr-gold-light)">📋</div>
+                <div>
+                    <p class="font-bold text-gray-800" id="ps-student-name">Student Name</p>
+                    <p class="text-sm text-gray-500" id="ps-student-info">Grade • Class</p>
+                </div>
+                <div class="ml-auto">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-bold badge-pending" id="ps-status-badge">Pending Signature</span>
+                </div>
+            </div>
+
+            <!-- Already Signed State -->
+            <div id="ps-already-signed" class="hidden text-center py-16 fade-in">
+                <div class="text-6xl mb-6">✅</div>
+                <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Already Signed</h3>
+                <p class="text-gray-500 mb-3 max-w-md mx-auto">This form has already been signed. A copy was sent to your email.</p>
+                <p class="text-gray-400 text-sm">If you have questions, please contact the school administration.</p>
+            </div>
+
+            <!-- Expired State -->
+            <div id="ps-expired" class="hidden text-center py-16 fade-in">
+                <div class="text-6xl mb-6">⏰</div>
+                <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Link Expired</h3>
+                <p class="text-gray-500 mb-3 max-w-md mx-auto">This signing link has expired. Please contact the school to request a new one.</p>
+            </div>
+
+            <!-- Invalid Token -->
+            <div id="ps-invalid" class="hidden text-center py-16 fade-in">
+                <div class="text-6xl mb-6">❌</div>
+                <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Invalid Link</h3>
+                <p class="text-gray-500 mb-3 max-w-md mx-auto">This link is not valid. Please check your email for the correct signing link.</p>
+            </div>
+
+            <!-- Signing Flow -->
+            <div id="ps-signing-flow" class="space-y-6">
+                <!-- Document Preview -->
+                <div class="card-static">
+                    <h3 class="text-lg font-bold mb-3" style="color: var(--clr-forest)">📄 Document Preview</h3>
+                    <p class="text-sm text-gray-500 mb-4">Review the document carefully before signing.</p>
+                    <div class="pdf-preview-area" id="ps-pdf-preview">
+                        <div class="text-center p-8">
+                            <div class="animate-spin w-8 h-8 border-4 border-gray-200 border-t-[#4a7c6f] rounded-full mx-auto mb-3"></div>
+                            <p class="text-sm text-gray-400">Loading document...</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <button onclick="downloadFormPDF()" class="btn-outline text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Download PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signature Section -->
+                <div class="card-static">
+                    <h3 class="text-lg font-bold mb-1" style="color: var(--clr-forest)">✍️ Your Signature</h3>
+                    <p class="text-sm text-gray-500 mb-4">Draw your signature in the box below, or type your full name.</p>
+
+                    <!-- Sig mode toggle -->
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="setSigMode('draw')" id="sig-mode-draw" class="tab-btn active text-sm">Draw</button>
+                        <button onclick="setSigMode('type')" id="sig-mode-type" class="tab-btn text-sm">Type</button>
+                    </div>
+
+                    <!-- Draw signature -->
+                    <div id="sig-draw-section">
+                        <div class="sig-pad-wrap">
+                            <canvas id="sig-canvas" class="sig-canvas w-full" height="160"></canvas>
+                            <div class="sig-placeholder" id="sig-placeholder">Sign here with your finger or mouse</div>
+                        </div>
+                        <div class="flex justify-end mt-2">
+                            <button onclick="clearSignature()" class="text-sm text-gray-400 hover:text-gray-600 transition">Clear Signature</button>
+                        </div>
+                    </div>
+
+                    <!-- Type signature -->
+                    <div id="sig-type-section" class="hidden">
+                        <input type="text" id="sig-typed-name" placeholder="Type your full legal name" class="form-input text-lg" oninput="checkParentSignReady()">
+                        <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[80px] flex items-center justify-center">
+                            <p id="sig-typed-preview" class="text-2xl text-gray-300 italic" style="font-family: 'Lora', serif;">Your signature preview</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attestation -->
+                <div class="card-static">
+                    <h3 class="text-lg font-bold mb-4" style="color: var(--clr-forest)">📜 Acknowledgement</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-[#c9a84c] transition cursor-pointer">
+                            <input type="checkbox" id="ps-chk-reviewed" class="mt-1 w-5 h-5" onchange="checkParentSignReady()">
+                            <div>
+                                <p class="font-semibold text-sm text-gray-800">I have reviewed the document</p>
+                                <p class="text-xs text-gray-500 mt-1">I confirm that I have carefully read and understood the contents of this form.</p>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 p-4 rounded-lg border border-gray-200 hover:border-[#c9a84c] transition cursor-pointer">
+                            <input type="checkbox" id="ps-chk-agree" class="mt-1 w-5 h-5" onchange="checkParentSignReady()">
+                            <div>
+                                <p class="font-semibold text-sm text-gray-800">I agree to sign this document digitally</p>
+                                <p class="text-xs text-gray-500 mt-1">I understand that my digital signature is legally binding and equivalent to a handwritten signature.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button onclick="submitParentSignature()" id="ps-btn-submit" disabled class="btn-gold w-full py-4 text-center text-base">
+                    ✦ Sign & Submit
+                </button>
+            </div>
+
+            <!-- Success State -->
+            <div id="ps-success" class="hidden text-center py-16 fade-in">
+                <div class="text-6xl mb-6">🎉</div>
+                <h3 class="text-2xl font-bold mb-3" style="color: var(--clr-forest)">Successfully Signed!</h3>
+                <p class="text-gray-500 mb-3 max-w-md mx-auto">Your signed document has been saved. A copy has been sent to your email address.</p>
+                <p class="text-sm text-gray-400 mb-8">You may close this page.</p>
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4 max-w-sm mx-auto">
+                    <p class="text-sm text-green-700 font-semibold">Signed Document</p>
+                    <p class="text-xs text-green-600 mt-1">A PDF copy has been emailed to <span id="ps-confirm-email" class="font-bold">you</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VIEW: ADMIN LOGIN                            -->
+    <!-- ============================================ -->
+    <div id="view-admin-login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="card-static max-w-md w-full p-8 text-center gold-glow fade-in">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background: linear-gradient(135deg, var(--clr-forest), var(--clr-sage))">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-2" style="color: var(--clr-forest)">SVA Digital Forms</h2>
+            <p class="text-gray-500 mb-6 text-sm leading-relaxed">
+                Sign in with your SVA admin account to manage form signature requests.
+            </p>
+            <div class="flex justify-center mb-4">
+                <div id="g_id_onload"
+                     data-client_id="14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com"
+                     data-callback="handleAdminLogin"
+                     data-auto_select="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 mt-2">
+                <p class="text-xs text-gray-500 leading-relaxed">Access restricted to authorized SVA staff accounts.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- VIEW: ADMIN DASHBOARD                        -->
+    <!-- ============================================ -->
+    <div id="view-admin" class="hidden min-h-screen">
+        <!-- Admin Header -->
+        <div class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div class="max-w-6xl mx-auto px-4 sm:px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-lg font-bold" style="color: var(--clr-forest)">SVA Digital Forms</h1>
+                    <p class="text-xs text-gray-500" id="admin-display">Admin</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshDashboard()" class="btn-outline text-sm flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Refresh
+                    </button>
+                    <button onclick="adminLogout()" class="text-sm text-gray-500 hover:text-gray-800 transition">Sign Out</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 sm:px-8 py-8">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 fade-in">
+                <div class="card-static text-center p-5">
+                    <p class="text-3xl font-bold" style="color: var(--clr-forest)" id="stat-total">0</p>
+                    <p class="text-xs text-gray-500 mt-1 font-medium">Total Sent</p>
+                </div>
+                <div class="card-static text-center p-5">
+                    <p class="text-3xl font-bold text-blue-600" id="stat-pending">0</p>
+                    <p class="text-xs text-gray-500 mt-1 font-medium">Pending</p>
+                </div>
+                <div class="card-static text-center p-5">
+                    <p class="text-3xl font-bold text-green-600" id="stat-signed">0</p>
+                    <p class="text-xs text-gray-500 mt-1 font-medium">Signed</p>
+                </div>
+                <div class="card-static text-center p-5">
+                    <p class="text-3xl font-bold text-red-600" id="stat-expired">0</p>
+                    <p class="text-xs text-gray-500 mt-1 font-medium">Expired</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex items-center gap-2 mb-6 flex-wrap">
+                <button onclick="switchTab('send')" id="tab-send" class="tab-btn active">✦ Send New Form</button>
+                <button onclick="switchTab('tracking')" id="tab-tracking" class="tab-btn">📊 Tracking</button>
+                <button onclick="switchTab('signed')" id="tab-signed" class="tab-btn">✅ Signed Documents</button>
+                <button onclick="switchTab('templates')" id="tab-templates" class="tab-btn">📄 Form Templates</button>
+            </div>
+
+            <!-- ================================== -->
+            <!-- TAB: SEND NEW FORM                 -->
+            <!-- ================================== -->
+            <div id="panel-send" class="fade-in">
+                <div class="card-static p-6 sm:p-8">
+                    <h2 class="text-xl font-bold mb-1" style="color: var(--clr-forest)">Send Form for Signature</h2>
+                    <p class="text-sm text-gray-500 mb-6">Select students and a form template to generate unique signing links.</p>
+
+                    <!-- Step 1: Select Form Template -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">1. Select Form Template</label>
+                        <select id="send-template" class="form-input" onchange="onTemplateSelect()">
+                            <option value="">— Choose a form template —</option>
+                        </select>
+                        <div id="send-template-preview" class="hidden mt-3 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <p class="text-sm font-semibold text-gray-700" id="send-tpl-name"></p>
+                            <p class="text-xs text-gray-500 mt-1" id="send-tpl-desc"></p>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Select Students -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">2. Select Students</label>
+
+                        <!-- Filters -->
+                        <div class="flex flex-wrap gap-3 mb-4">
+                            <input type="text" id="student-search" placeholder="Search by name..." class="search-input" oninput="filterStudents()">
+                            <select id="filter-grade" class="form-input" style="max-width:160px" onchange="filterStudents()">
+                                <option value="">All Grades</option>
+                            </select>
+                            <select id="filter-class" class="form-input" style="max-width:160px" onchange="filterStudents()">
+                                <option value="">All Classes</option>
+                            </select>
+                        </div>
+
+                        <!-- Select All -->
+                        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-200">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="select-all-students" class="w-4 h-4" onchange="toggleSelectAll()">
+                                <span class="text-sm font-semibold text-gray-600">Select All Visible</span>
+                            </label>
+                            <span class="text-xs text-gray-400" id="selected-count">0 selected</span>
+                        </div>
+
+                        <!-- Student List -->
+                        <div id="student-list" class="max-h-72 overflow-y-auto space-y-1 pr-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Options -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">3. Options</label>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-500 mb-1 block">Expiry (days)</label>
+                                <select id="send-expiry" class="form-input">
+                                    <option value="3">3 days</option>
+                                    <option value="7" selected>7 days</option>
+                                    <option value="14">14 days</option>
+                                    <option value="30">30 days</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 mb-1 block">Custom message (optional)</label>
+                                <input type="text" id="send-message" placeholder="e.g. Please sign by Friday" class="form-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Send Button -->
+                    <button onclick="sendForSignature()" id="btn-send-forms" disabled class="btn-gold w-full py-3 text-center text-base">
+                        ✦ Send Signing Requests
+                    </button>
+                </div>
+
+                <!-- Send Confirmation -->
+                <div id="send-success" class="hidden mt-6 card-static p-6 text-center fade-in">
+                    <div class="text-4xl mb-4">📨</div>
+                    <h3 class="text-xl font-bold mb-2" style="color: var(--clr-forest)">Signing Requests Sent!</h3>
+                    <p class="text-sm text-gray-500 mb-4" id="send-success-msg">Links have been sent to parents.</p>
+                    <div id="send-success-links" class="text-left bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto space-y-2 mb-4">
+                        <!-- Links list -->
+                    </div>
+                    <button onclick="resetSendForm()" class="btn-primary">Send Another Form</button>
+                </div>
+            </div>
+
+            <!-- ================================== -->
+            <!-- TAB: TRACKING                      -->
+            <!-- ================================== -->
+            <div id="panel-tracking" class="hidden fade-in">
+                <div class="card-static p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h2 class="text-xl font-bold" style="color: var(--clr-forest)">Signature Tracking</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="track-search" placeholder="Search..." class="search-input" style="max-width:220px" oninput="filterTracking()">
+                            <select id="track-filter-status" class="form-input" style="max-width:140px" onchange="filterTracking()">
+                                <option value="">All Status</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Signed">Signed</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Form</th>
+                                    <th>Parent Email</th>
+                                    <th>Sent</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tracking-tbody">
+                                <tr><td colspan="6" class="text-center text-gray-400 py-8">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================== -->
+            <!-- TAB: SIGNED DOCUMENTS              -->
+            <!-- ================================== -->
+            <div id="panel-signed" class="hidden fade-in">
+                <div class="card-static p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h2 class="text-xl font-bold" style="color: var(--clr-forest)">Signed Documents</h2>
+                        <input type="text" id="signed-search" placeholder="Search..." class="search-input" style="max-width:220px" oninput="filterSigned()">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Form</th>
+                                    <th>Signed By</th>
+                                    <th>Signed Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="signed-tbody">
+                                <tr><td colspan="5" class="text-center text-gray-400 py-8">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================== -->
+            <!-- TAB: FORM TEMPLATES                -->
+            <!-- ================================== -->
+            <div id="panel-templates" class="hidden fade-in">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <h2 class="text-xl font-bold" style="color: var(--clr-forest)">Form Templates</h2>
+                    <button onclick="showAddTemplate()" class="btn-primary text-sm flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Template
+                    </button>
+                </div>
+                <div id="templates-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Add Template Modal -->
+                <div id="modal-add-template" class="hidden overlay">
+                    <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto fade-in">
+                        <h3 class="text-xl font-bold mb-4" style="color: var(--clr-forest)">Add Form Template</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Template Name</label>
+                                <input type="text" id="tpl-name" placeholder="e.g. Field Trip Permission Slip" class="form-input">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Description</label>
+                                <input type="text" id="tpl-desc" placeholder="Brief description of the form" class="form-input">
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Google Drive PDF Link</label>
+                                <input type="text" id="tpl-drive-link" placeholder="https://drive.google.com/file/d/..." class="form-input">
+                                <p class="text-xs text-gray-400 mt-1">Paste the shareable link to the PDF form on Google Drive.</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-gray-700 mb-1 block">Category</label>
+                                <select id="tpl-category" class="form-input">
+                                    <option value="Permission">Permission Slip</option>
+                                    <option value="Medical">Medical Form</option>
+                                    <option value="Financial">Financial / Tuition</option>
+                                    <option value="Policy">Policy Acknowledgement</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="closeAddTemplate()" class="btn-outline flex-1">Cancel</button>
+                            <button onclick="saveTemplate()" class="btn-primary flex-1">Save Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- LOADING OVERLAY                              -->
+    <!-- ============================================ -->
+    <div id="loading-overlay" class="hidden overlay" style="background: rgba(0,0,0,0.5);">
+        <div class="bg-white rounded-2xl p-8 text-center max-w-sm mx-4 fade-in">
+            <div class="animate-spin w-10 h-10 border-4 border-gray-200 border-t-[#4a7c6f] rounded-full mx-auto mb-4"></div>
+            <p class="font-semibold text-gray-700" id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- RESEND CONFIRMATION MODAL                    -->
+    <!-- ============================================ -->
+    <div id="modal-resend" class="hidden overlay">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 fade-in">
+            <h3 class="text-lg font-bold mb-2" style="color: var(--clr-forest)">Resend Signing Request?</h3>
+            <p class="text-sm text-gray-500 mb-4" id="resend-info">A new email will be sent to the parent.</p>
+            <div class="flex gap-3">
+                <button onclick="closeResend()" class="btn-outline flex-1">Cancel</button>
+                <button onclick="confirmResend()" class="btn-primary flex-1">Resend</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- PREVIEW SIGNED DOC MODAL                     -->
+    <!-- ============================================ -->
+    <div id="modal-preview" class="hidden overlay">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold" style="color: var(--clr-forest)">Signed Document</h3>
+                <button onclick="closePreview()" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div id="preview-content" class="pdf-preview-area min-h-[400px]">
+                <p class="text-gray-400">Loading...</p>
+            </div>
+            <div class="flex justify-end gap-3 mt-4">
+                <a id="preview-drive-link" href="#" target="_blank" class="btn-outline text-sm flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    Open in Drive
+                </a>
+                <button onclick="closePreview()" class="btn-primary text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+// ==========================================
+// CONFIGURATION
+// ==========================================
+const BACKEND_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
+const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
+const SITE_DOMAIN = window.location.origin; // e.g. https://yourdomain.com
+
+// ==========================================
+// STATE
+// ==========================================
+let ADMIN_TOKEN = "";
+let ADMIN_EMAIL = "";
+let ALL_STUDENTS = [];
+let SELECTED_STUDENTS = new Set();
+let TEMPLATES = [];
+let TRACKING_DATA = [];
+let SIGNED_DATA = [];
+let CURRENT_RESEND_ID = null;
+
+// Parent signing state
+let PARENT_TOKEN = null;
+let PARENT_FORM_DATA = null;
+let SIG_MODE = 'draw';
+let SIG_DRAWN = false;
+
+// ==========================================
+// INITIALIZATION — CHECK URL FOR TOKEN
+// ==========================================
+(function init() {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    // Check if URL has a signing token: domain.com/sign/{token} or ?token=xxx or #token
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromParam = urlParams.get('token');
+    const pathMatch = path.match(/\/sign\/([a-zA-Z0-9_-]+)/);
+    const hashToken = hash ? hash.replace('#', '') : null;
+
+    PARENT_TOKEN = tokenFromParam || (pathMatch ? pathMatch[1] : null) || (hashToken && hashToken.length > 20 ? hashToken : null);
+
+    if (PARENT_TOKEN) {
+        // Parent signing mode
+        document.getElementById('view-admin-login').classList.add('hidden');
+        document.getElementById('view-parent-sign').classList.remove('hidden');
+        loadParentForm(PARENT_TOKEN);
+    }
+    // Otherwise show admin login
+})();
+
+// ==========================================
+// PARENT SIGNING FLOW
+// ==========================================
+function loadParentForm(token) {
+    showLoading("Loading your form...");
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'getSigningForm', token: token })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'error') {
+            if (data.reason === 'expired') {
+                document.getElementById('ps-signing-flow').classList.add('hidden');
+                document.getElementById('ps-expired').classList.remove('hidden');
+            } else if (data.reason === 'already_signed') {
+                document.getElementById('ps-signing-flow').classList.add('hidden');
+                document.getElementById('ps-already-signed').classList.remove('hidden');
+                document.getElementById('ps-status-badge').textContent = 'Signed';
+                document.getElementById('ps-status-badge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold badge-signed';
+            } else {
+                document.getElementById('ps-signing-flow').classList.add('hidden');
+                document.getElementById('ps-invalid').classList.remove('hidden');
+            }
+            return;
+        }
+
+        PARENT_FORM_DATA = data;
+        document.getElementById('ps-form-title').textContent = data.formName || 'Review & Sign';
+        document.getElementById('ps-description').textContent = data.description || 'Please review the document below carefully, then provide your digital signature.';
+        document.getElementById('ps-student-name').textContent = data.studentName || 'Student';
+        document.getElementById('ps-student-info').textContent = (data.grade || '') + (data.className ? ' • ' + data.className : '');
+
+        // Load PDF preview
+        if (data.pdfUrl) {
+            document.getElementById('ps-pdf-preview').innerHTML = `<iframe src="${data.pdfUrl}" class="w-full" style="min-height:500px; border:none;"></iframe>`;
+        } else if (data.pdfEmbedHtml) {
+            document.getElementById('ps-pdf-preview').innerHTML = data.pdfEmbedHtml;
+        } else {
+            document.getElementById('ps-pdf-preview').innerHTML = `<div class="text-center p-8"><p class="text-gray-400">Document preview not available.<br>Please contact the school.</p></div>`;
+        }
+
+        initSignatureCanvas();
+    })
+    .catch(err => {
+        hideLoading();
+        document.getElementById('ps-signing-flow').classList.add('hidden');
+        document.getElementById('ps-invalid').classList.remove('hidden');
+    });
+}
+
+// ==========================================
+// SIGNATURE CANVAS
+// ==========================================
+function initSignatureCanvas() {
+    const canvas = document.getElementById('sig-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas resolution
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2;
+    canvas.height = 320;
+    ctx.scale(2, 2);
+    ctx.strokeStyle = '#1a3c34';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    let drawing = false;
+    let lastX, lastY;
+
+    function getPos(e) {
+        const r = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - r.left, y: clientY - r.top };
+    }
+
+    function startDraw(e) {
+        e.preventDefault();
+        drawing = true;
+        const p = getPos(e);
+        lastX = p.x;
+        lastY = p.y;
+        document.getElementById('sig-placeholder').classList.add('hidden');
+        SIG_DRAWN = true;
+        canvas.classList.add('has-sig');
+        checkParentSignReady();
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const p = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        lastX = p.x;
+        lastY = p.y;
+    }
+
+    function stopDraw() { drawing = false; }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDraw);
+}
+
+function clearSignature() {
+    const canvas = document.getElementById('sig-canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    SIG_DRAWN = false;
+    canvas.classList.remove('has-sig');
+    document.getElementById('sig-placeholder').classList.remove('hidden');
+    checkParentSignReady();
+}
+
+function setSigMode(mode) {
+    SIG_MODE = mode;
+    document.getElementById('sig-mode-draw').classList.toggle('active', mode === 'draw');
+    document.getElementById('sig-mode-type').classList.toggle('active', mode === 'type');
+    document.getElementById('sig-draw-section').classList.toggle('hidden', mode !== 'draw');
+    document.getElementById('sig-type-section').classList.toggle('hidden', mode !== 'type');
+    checkParentSignReady();
+}
+
+function checkParentSignReady() {
+    const reviewed = document.getElementById('ps-chk-reviewed').checked;
+    const agreed = document.getElementById('ps-chk-agree').checked;
+    let hasSig = false;
+
+    if (SIG_MODE === 'draw') {
+        hasSig = SIG_DRAWN;
+    } else {
+        const typed = document.getElementById('sig-typed-name').value.trim();
+        hasSig = typed.length >= 2;
+        document.getElementById('sig-typed-preview').textContent = typed || 'Your signature preview';
+        document.getElementById('sig-typed-preview').style.color = typed ? '#1a3c34' : '#ccc';
+    }
+
+    document.getElementById('ps-btn-submit').disabled = !(reviewed && agreed && hasSig);
+}
+
+function getSignatureData() {
+    if (SIG_MODE === 'draw') {
+        const canvas = document.getElementById('sig-canvas');
+        return { type: 'drawn', data: canvas.toDataURL('image/png') };
+    } else {
+        return { type: 'typed', data: document.getElementById('sig-typed-name').value.trim() };
+    }
+}
+
+function submitParentSignature() {
+    if (!PARENT_TOKEN) return;
+    showLoading("Submitting your signature...\nThis may take a moment.");
+
+    const sigData = getSignatureData();
+    const payload = {
+        action: 'submitSignature',
+        token: PARENT_TOKEN,
+        signature: sigData,
+        signedAt: new Date().toISOString()
+    };
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            document.getElementById('ps-signing-flow').classList.add('hidden');
+            document.getElementById('ps-success').classList.remove('hidden');
+            document.getElementById('ps-status-badge').textContent = 'Signed';
+            document.getElementById('ps-status-badge').className = 'inline-block px-3 py-1 rounded-full text-xs font-bold badge-signed';
+            if (data.email) {
+                document.getElementById('ps-confirm-email').textContent = data.email;
+            }
+        } else {
+            alert("Error: " + (data.message || "Submission failed. Please try again."));
+        }
+    })
+    .catch(e => {
+        hideLoading();
+        alert("Failed to submit. Please check your connection and try again.");
+    });
+}
+
+function downloadFormPDF() {
+    if (PARENT_FORM_DATA && PARENT_FORM_DATA.pdfDownloadUrl) {
+        window.open(PARENT_FORM_DATA.pdfDownloadUrl, '_blank');
+    }
+}
+
+// ==========================================
+// ADMIN AUTH
+// ==========================================
+function handleAdminLogin(response) {
+    ADMIN_TOKEN = response.credential;
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    ADMIN_EMAIL = payload.email;
+
+    showLoading("Verifying admin access...");
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'verifyAdmin', token: ADMIN_TOKEN })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            document.getElementById('view-admin-login').classList.add('hidden');
+            document.getElementById('view-admin').classList.remove('hidden');
+            document.getElementById('admin-display').textContent = ADMIN_EMAIL;
+
+            ALL_STUDENTS = data.students || [];
+            TEMPLATES = data.templates || [];
+            TRACKING_DATA = data.tracking || [];
+            SIGNED_DATA = data.signed || [];
+
+            populateFilters();
+            renderStudentList();
+            renderTemplateOptions();
+            renderTemplatesGrid();
+            renderTrackingTable();
+            renderSignedTable();
+            updateStats();
+        } else {
+            alert(data.message || "Access denied. Admin accounts only.");
+        }
+    })
+    .catch(err => {
+        hideLoading();
+        alert("Failed to connect. Please try again.");
+    });
+}
+
+function adminLogout() {
+    ADMIN_TOKEN = "";
+    ADMIN_EMAIL = "";
+    ALL_STUDENTS = [];
+    SELECTED_STUDENTS.clear();
+    TEMPLATES = [];
+    TRACKING_DATA = [];
+    SIGNED_DATA = [];
+    document.getElementById('view-admin').classList.add('hidden');
+    document.getElementById('view-admin-login').classList.remove('hidden');
+}
+
+function refreshDashboard() {
+    if (!ADMIN_TOKEN) return;
+    showLoading("Refreshing data...");
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'refreshDashboard', token: ADMIN_TOKEN })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            TRACKING_DATA = data.tracking || [];
+            SIGNED_DATA = data.signed || [];
+            if (data.students) ALL_STUDENTS = data.students;
+            if (data.templates) { TEMPLATES = data.templates; renderTemplateOptions(); renderTemplatesGrid(); }
+            renderTrackingTable();
+            renderSignedTable();
+            updateStats();
+        }
+    })
+    .catch(() => { hideLoading(); });
+}
+
+// ==========================================
+// STUDENT LIST & SELECTION
+// ==========================================
+function populateFilters() {
+    const grades = [...new Set(ALL_STUDENTS.map(s => s.grade).filter(Boolean))].sort();
+    const classes = [...new Set(ALL_STUDENTS.map(s => s.className).filter(Boolean))].sort();
+
+    const gradeSelect = document.getElementById('filter-grade');
+    gradeSelect.innerHTML = '<option value="">All Grades</option>' + grades.map(g => `<option value="${g}">${g}</option>`).join('');
+
+    const classSelect = document.getElementById('filter-class');
+    classSelect.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function getFilteredStudents() {
+    const search = document.getElementById('student-search').value.toLowerCase();
+    const grade = document.getElementById('filter-grade').value;
+    const cls = document.getElementById('filter-class').value;
+
+    return ALL_STUDENTS.filter(s => {
+        if (search && !s.name.toLowerCase().includes(search) && !(s.studentId || '').toLowerCase().includes(search)) return false;
+        if (grade && s.grade !== grade) return false;
+        if (cls && s.className !== cls) return false;
+        return true;
+    });
+}
+
+function renderStudentList() {
+    const filtered = getFilteredStudents();
+    const container = document.getElementById('student-list');
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm">No students found.</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(s => `
+        <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#c9a84c] hover:bg-[#faf8f3] transition cursor-pointer ${SELECTED_STUDENTS.has(s.studentId) ? 'border-[#c9a84c] bg-[#faf8f3]' : ''}">
+            <input type="checkbox" class="w-4 h-4 student-chk" data-id="${s.studentId}" ${SELECTED_STUDENTS.has(s.studentId) ? 'checked' : ''} onchange="toggleStudent('${s.studentId}')">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-800 truncate">${s.name}</p>
+                <p class="text-xs text-gray-400">${s.grade || ''}${s.className ? ' • ' + s.className : ''}${s.parentEmail ? ' • ' + s.parentEmail : ''}</p>
+            </div>
+        </label>
+    `).join('');
+
+    updateSelectedCount();
+}
+
+function filterStudents() { renderStudentList(); }
+
+function toggleStudent(id) {
+    if (SELECTED_STUDENTS.has(id)) SELECTED_STUDENTS.delete(id);
+    else SELECTED_STUDENTS.add(id);
+    updateSelectedCount();
+    checkSendReady();
+}
+
+function toggleSelectAll() {
+    const checked = document.getElementById('select-all-students').checked;
+    const filtered = getFilteredStudents();
+    filtered.forEach(s => {
+        if (checked) SELECTED_STUDENTS.add(s.studentId);
+        else SELECTED_STUDENTS.delete(s.studentId);
+    });
+    renderStudentList();
+    checkSendReady();
+}
+
+function updateSelectedCount() {
+    document.getElementById('selected-count').textContent = `${SELECTED_STUDENTS.size} selected`;
+}
+
+// ==========================================
+// TEMPLATES
+// ==========================================
+function renderTemplateOptions() {
+    const select = document.getElementById('send-template');
+    select.innerHTML = '<option value="">— Choose a form template —</option>' +
+        TEMPLATES.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+}
+
+function onTemplateSelect() {
+    const idx = document.getElementById('send-template').value;
+    const preview = document.getElementById('send-template-preview');
+    if (idx === '') {
+        preview.classList.add('hidden');
+    } else {
+        const t = TEMPLATES[idx];
+        document.getElementById('send-tpl-name').textContent = t.name;
+        document.getElementById('send-tpl-desc').textContent = t.description || t.category || '';
+        preview.classList.remove('hidden');
+    }
+    checkSendReady();
+}
+
+function renderTemplatesGrid() {
+    const container = document.getElementById('templates-grid');
+    if (TEMPLATES.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center text-gray-400 py-12">No templates yet. Add one to get started.</div>';
+        return;
+    }
+
+    const catIcons = { Permission: '📝', Medical: '🏥', Financial: '💰', Policy: '📜', Other: '📄' };
+    const catColors = { Permission: 'bg-blue-50 text-blue-700', Medical: 'bg-red-50 text-red-700', Financial: 'bg-green-50 text-green-700', Policy: 'bg-purple-50 text-purple-700', Other: 'bg-gray-50 text-gray-600' };
+
+    container.innerHTML = TEMPLATES.map((t, i) => `
+        <div class="card p-5">
+            <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl ${catColors[t.category] || catColors.Other} flex items-center justify-center text-lg flex-shrink-0">
+                    ${catIcons[t.category] || catIcons.Other}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-gray-800 text-sm truncate">${t.name}</h4>
+                    <p class="text-xs text-gray-400 mt-0.5">${t.category || 'Other'}</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mb-3 line-clamp-2">${t.description || 'No description'}</p>
+            <div class="flex gap-2">
+                <a href="${t.driveLink || '#'}" target="_blank" class="text-xs text-[#4a7c6f] hover:underline font-semibold">View PDF ↗</a>
+                <span class="text-gray-300">•</span>
+                <button onclick="deleteTemplate(${i})" class="text-xs text-red-400 hover:text-red-600 font-semibold">Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddTemplate() { document.getElementById('modal-add-template').classList.remove('hidden'); }
+function closeAddTemplate() { document.getElementById('modal-add-template').classList.add('hidden'); }
+
+function saveTemplate() {
+    const name = document.getElementById('tpl-name').value.trim();
+    const desc = document.getElementById('tpl-desc').value.trim();
+    const link = document.getElementById('tpl-drive-link').value.trim();
+    const cat = document.getElementById('tpl-category').value;
+
+    if (!name || !link) {
+        alert("Please fill in the template name and Drive link.");
+        return;
+    }
+
+    showLoading("Saving template...");
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'addTemplate',
+            token: ADMIN_TOKEN,
+            template: { name, description: desc, driveLink: link, category: cat }
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            TEMPLATES.push(data.template || { name, description: desc, driveLink: link, category: cat });
+            renderTemplateOptions();
+            renderTemplatesGrid();
+            closeAddTemplate();
+            // Clear form
+            document.getElementById('tpl-name').value = '';
+            document.getElementById('tpl-desc').value = '';
+            document.getElementById('tpl-drive-link').value = '';
+        } else {
+            alert(data.message || "Failed to save template.");
+        }
+    })
+    .catch(() => { hideLoading(); alert("Connection error."); });
+}
+
+function deleteTemplate(idx) {
+    if (!confirm(`Delete template "${TEMPLATES[idx].name}"?`)) return;
+    showLoading("Deleting...");
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'deleteTemplate',
+            token: ADMIN_TOKEN,
+            templateIndex: idx,
+            templateName: TEMPLATES[idx].name
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            TEMPLATES.splice(idx, 1);
+            renderTemplateOptions();
+            renderTemplatesGrid();
+        }
+    })
+    .catch(() => { hideLoading(); });
+}
+
+// ==========================================
+// SEND FOR SIGNATURE
+// ==========================================
+function checkSendReady() {
+    const tpl = document.getElementById('send-template').value;
+    document.getElementById('btn-send-forms').disabled = !(tpl !== '' && SELECTED_STUDENTS.size > 0);
+}
+
+function sendForSignature() {
+    const tplIdx = document.getElementById('send-template').value;
+    if (tplIdx === '' || SELECTED_STUDENTS.size === 0) return;
+
+    const template = TEMPLATES[tplIdx];
+    const expiry = document.getElementById('send-expiry').value;
+    const message = document.getElementById('send-message').value.trim();
+    const studentIds = [...SELECTED_STUDENTS];
+
+    showLoading(`Sending to ${studentIds.length} parent(s)...\nGenerating unique signing links.`);
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+            action: 'sendForSignature',
+            token: ADMIN_TOKEN,
+            templateName: template.name,
+            templateDriveLink: template.driveLink,
+            studentIds: studentIds,
+            expiryDays: parseInt(expiry),
+            customMessage: message,
+            siteDomain: SITE_DOMAIN
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            // Show success with links
+            document.getElementById('panel-send').querySelector('.card-static').classList.add('hidden');
+            document.getElementById('send-success').classList.remove('hidden');
+            document.getElementById('send-success-msg').textContent = `${data.sentCount || studentIds.length} signing request(s) sent successfully. Parents will receive an email with their unique signing link.`;
+
+            const linksContainer = document.getElementById('send-success-links');
+            linksContainer.innerHTML = (data.links || []).map(l => `
+                <div class="flex items-center gap-2 p-2 bg-white rounded border border-gray-200">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-gray-700 truncate">${l.studentName}</p>
+                        <p class="text-xs text-gray-400 truncate">${l.parentEmail}</p>
+                    </div>
+                    <button onclick="copyLink('${l.signingUrl}')" class="text-xs text-[#4a7c6f] hover:underline font-semibold flex-shrink-0">Copy Link</button>
+                </div>
+            `).join('');
+
+            // Add new entries to tracking
+            if (data.newTracking) {
+                TRACKING_DATA = [...data.newTracking, ...TRACKING_DATA];
+                renderTrackingTable();
+                updateStats();
+            }
+        } else {
+            alert(data.message || "Failed to send. Please try again.");
+        }
+    })
+    .catch(e => {
+        hideLoading();
+        alert("Connection error. Please try again.");
+    });
+}
+
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        // Brief visual feedback
+        alert("Link copied to clipboard!");
+    });
+}
+
+function resetSendForm() {
+    document.getElementById('panel-send').querySelector('.card-static').classList.remove('hidden');
+    document.getElementById('send-success').classList.add('hidden');
+    SELECTED_STUDENTS.clear();
+    document.getElementById('send-template').value = '';
+    document.getElementById('send-template-preview').classList.add('hidden');
+    document.getElementById('send-message').value = '';
+    renderStudentList();
+    checkSendReady();
+}
+
+// ==========================================
+// TRACKING TABLE
+// ==========================================
+function renderTrackingTable() {
+    const tbody = document.getElementById('tracking-tbody');
+    const filtered = getFilteredTracking();
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-400 py-8">No records found.</td></tr>';
+        return;
+    }
+
+    const badgeClass = { Pending: 'badge-pending', Signed: 'badge-signed', Expired: 'badge-expired', Sent: 'badge-sent' };
+
+    tbody.innerHTML = filtered.map(r => `
+        <tr>
+            <td class="font-semibold text-gray-800">${r.studentName}</td>
+            <td>${r.formName}</td>
+            <td class="text-gray-500">${r.parentEmail}</td>
+            <td class="text-gray-500 text-xs">${formatDate(r.sentDate)}</td>
+            <td><span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass[r.status] || 'badge-pending'}">${r.status}</span></td>
+            <td>
+                <div class="flex gap-2">
+                    ${r.status === 'Pending' || r.status === 'Sent' ? `<button onclick="resendRequest('${r.id}')" class="text-xs text-[#4a7c6f] hover:underline font-semibold">Resend</button>` : ''}
+                    ${r.status === 'Signed' && r.driveFileUrl ? `<a href="${r.driveFileUrl}" target="_blank" class="text-xs text-[#4a7c6f] hover:underline font-semibold">View</a>` : ''}
+                    <button onclick="copyLink('${SITE_DOMAIN}?token=${r.token || ''}')" class="text-xs text-gray-400 hover:text-gray-600 font-semibold">Copy Link</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getFilteredTracking() {
+    const search = (document.getElementById('track-search').value || '').toLowerCase();
+    const status = document.getElementById('track-filter-status').value;
+
+    return TRACKING_DATA.filter(r => {
+        if (search && !r.studentName.toLowerCase().includes(search) && !r.formName.toLowerCase().includes(search) && !(r.parentEmail || '').toLowerCase().includes(search)) return false;
+        if (status && r.status !== status) return false;
+        return true;
+    });
+}
+
+function filterTracking() { renderTrackingTable(); }
+
+// ==========================================
+// SIGNED DOCUMENTS TABLE
+// ==========================================
+function renderSignedTable() {
+    const tbody = document.getElementById('signed-tbody');
+    const filtered = getFilteredSigned();
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-400 py-8">No signed documents yet.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(r => `
+        <tr>
+            <td class="font-semibold text-gray-800">${r.studentName}</td>
+            <td>${r.formName}</td>
+            <td class="text-gray-500">${r.signedBy || r.parentEmail}</td>
+            <td class="text-gray-500 text-xs">${formatDate(r.signedDate)}</td>
+            <td>
+                <div class="flex gap-2">
+                    ${r.driveFileUrl ? `<a href="${r.driveFileUrl}" target="_blank" class="text-xs text-[#4a7c6f] hover:underline font-semibold">Open in Drive</a>` : ''}
+                    ${r.driveFileUrl ? `<button onclick="previewSignedDoc('${r.driveFileUrl}')" class="text-xs text-gray-400 hover:text-gray-600 font-semibold">Preview</button>` : ''}
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getFilteredSigned() {
+    const search = (document.getElementById('signed-search').value || '').toLowerCase();
+    return SIGNED_DATA.filter(r => {
+        if (search && !r.studentName.toLowerCase().includes(search) && !r.formName.toLowerCase().includes(search)) return false;
+        return true;
+    });
+}
+
+function filterSigned() { renderSignedTable(); }
+
+// ==========================================
+// RESEND
+// ==========================================
+function resendRequest(id) {
+    CURRENT_RESEND_ID = id;
+    const record = TRACKING_DATA.find(r => r.id === id);
+    document.getElementById('resend-info').textContent = record
+        ? `Resend signing link to ${record.parentEmail} for ${record.studentName}'s "${record.formName}"?`
+        : 'Resend signing email to the parent?';
+    document.getElementById('modal-resend').classList.remove('hidden');
+}
+
+function closeResend() {
+    document.getElementById('modal-resend').classList.add('hidden');
+    CURRENT_RESEND_ID = null;
+}
+
+function confirmResend() {
+    if (!CURRENT_RESEND_ID) return;
+    closeResend();
+    showLoading("Resending...");
+
+    fetch(BACKEND_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'resendSigningRequest', token: ADMIN_TOKEN, requestId: CURRENT_RESEND_ID })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideLoading();
+        if (data.status === 'success') {
+            alert("Resent successfully!");
+        } else {
+            alert(data.message || "Failed to resend.");
+        }
+    })
+    .catch(() => { hideLoading(); alert("Connection error."); });
+}
+
+// ==========================================
+// PREVIEW
+// ==========================================
+function previewSignedDoc(url) {
+    document.getElementById('preview-content').innerHTML = `<iframe src="${url}" class="w-full" style="min-height:500px; border:none;"></iframe>`;
+    document.getElementById('preview-drive-link').href = url;
+    document.getElementById('modal-preview').classList.remove('hidden');
+}
+
+function closePreview() {
+    document.getElementById('modal-preview').classList.add('hidden');
+}
+
+// ==========================================
+// STATS
+// ==========================================
+function updateStats() {
+    const total = TRACKING_DATA.length;
+    const pending = TRACKING_DATA.filter(r => r.status === 'Pending' || r.status === 'Sent').length;
+    const signed = TRACKING_DATA.filter(r => r.status === 'Signed').length;
+    const expired = TRACKING_DATA.filter(r => r.status === 'Expired').length;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-signed').textContent = signed;
+    document.getElementById('stat-expired').textContent = expired;
+}
+
+// ==========================================
+// TAB NAVIGATION
+// ==========================================
+function switchTab(tab) {
+    ['send', 'tracking', 'signed', 'templates'].forEach(t => {
+        document.getElementById(`panel-${t}`).classList.toggle('hidden', t !== tab);
+        document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    });
+}
+
+// ==========================================
+// UTILITIES
+// ==========================================
+function showLoading(text) {
+    document.getElementById('loading-text').textContent = text || 'Processing...';
+    document.getElementById('loading-overlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').classList.add('hidden');
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '—';
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return dateStr; }
+}
+
+</script>
+</body>
+</html>
